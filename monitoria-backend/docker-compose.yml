@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    container_name: postgres_monitoria
+    environment:
+      POSTGRES_USER: lucas
+      POSTGRES_PASSWORD: devops123
+      POSTGRES_DB: monitoria
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: nestjs_monitoria
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://lucas:devops123@postgres:5432/monitoria"
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:

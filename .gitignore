@@ -1,0 +1,19 @@
+# node_modules em qualquer pasta
+**/node_modules
+
+# arquivos de ambiente
+**/.env
+
+# build do frontend
+monitoria-frontend/dist
+
+# build do backend
+monitoria-backend/dist
+
+# arquivos do sistema
+.DS_Store
+*.log
+
+# arquivos Docker locais
+*.local
+docker-compose.override.yml
