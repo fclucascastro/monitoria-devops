@@ -25,6 +25,18 @@ function App() {
     setModalOpen(false)
   }
 
+  const deletarMonitoria = async (id: number) => {
+  if (!confirm("Tem certeza que deseja excluir esta monitoria?")) return;
+
+  try {
+    await axios.delete(`http://localhost:3000/monitoria/${id}`)
+    fetchMonitorias()
+  } catch (err) {
+    console.error("Erro ao excluir monitoria:", err)
+  }
+}
+
+
   return (
     <div className="min-h-screen bg-slate-900 text-white p-6">
       {/*<h1 className="text-2xl font-bold mb-4">Grade de Monitorias</h1>*/}
@@ -83,6 +95,12 @@ function App() {
                     <p className="font-semibold">{m.titulo}</p>
                     <p>{m.professor}</p>
                     <p className="text-xs text-gray-600">{m.horario}</p>
+                     <button
+        onClick={() => deletarMonitoria(m.id)}
+        className="mt-2 text-red-500 hover:underline text-sm"
+      >
+        Excluir
+      </button>
                   </div>
                 ))}
             </div>
