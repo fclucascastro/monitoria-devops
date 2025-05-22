@@ -3,4 +3,5 @@ export interface Monitoria {
   titulo: string
   professor: string
   horario: string
+   local?: string
 }

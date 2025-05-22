@@ -12,5 +12,6 @@ model Monitoria {
   titulo    String
   professor String
   horario   String
+  local     String
 }
 

@@ -7,7 +7,7 @@ const dias = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', '
 function App() {
   const [monitorias, setMonitorias] = useState<Monitoria[]>([])
   const [modalOpen, setModalOpen] = useState(false)
-  const [nova, setNova] = useState({ titulo: "", professor: "", horario: "" })
+  const [nova, setNova] = useState({ titulo: "", professor: "", horario: "", local: ""})
 
   const fetchMonitorias = () => {
     axios.get("http://localhost:3000/monitoria")
@@ -21,7 +21,7 @@ function App() {
   const enviarMonitoria = async () => {
     await axios.post("http://localhost:3000/monitoria", nova)
     fetchMonitorias()
-    setNova({ titulo: "", professor: "", horario: "" })
+    setNova({ titulo: "", professor: "", horario: "", local:"" })
     setModalOpen(false)
   }
 
@@ -73,6 +73,13 @@ function App() {
         value={nova.horario}
         onChange={(e) => setNova({ ...nova, horario: e.target.value })}
       />
+      <input
+        className="w-full mb-4 p-2 border rounded"
+        placeholder="Local (sala e bloco)"
+        value={nova.local}
+        onChange={(e) => setNova({ ...nova, local: e.target.value })}
+      />
+
       <div className="flex justify-end gap-2">
         <button onClick={() => setModalOpen(false)} className="px-4 py-2">Cancelar</button>
         <button onClick={enviarMonitoria} className="bg-green-600 px-4 py-2 text-white rounded hover:bg-green-700">
@@ -95,6 +102,8 @@ function App() {
                     <p className="font-semibold">{m.titulo}</p>
                     <p>{m.professor}</p>
                     <p className="text-xs text-gray-600">{m.horario}</p>
+                    <p className="text-xs text-gray-600 italic">{m.local}</p>
+
                      <button
         onClick={() => deletarMonitoria(m.id)}
         className="mt-2 text-red-500 hover:underline text-sm"
