@@ -12,7 +12,7 @@ function App() {
 
   const fetchMonitorias = () => {
     {/*axios.get("http://localhost:3000/monitoria")*/}
-    axios.get(`${API_URL}/monitoria`)
+    axios.get(`${import.meta.env.VITE_API_URL}/monitoria`)
       .then(res => setMonitorias(res.data))
   }
 
@@ -22,7 +22,7 @@ function App() {
 
   const enviarMonitoria = async () => {
     {/*await axios.post("http://localhost:3000/monitoria", nova)*/}
-    await axios.post("`${API_URL}/monitoria", nova)
+    axios.post(`${import.meta.env.VITE_API_URL}/monitoria`, nova)
     fetchMonitorias()
     setNova({ titulo: "", professor: "", horario: "", local:"" })
     setModalOpen(false)
@@ -33,7 +33,7 @@ function App() {
 
   try {
     {/*await axios.delete(`http://localhost:3000/monitoria/${id}`)*/}
-     await axios.delete(`${API_URL}/monitoria/${id}`)
+    axios.delete(`${import.meta.env.VITE_API_URL}/monitoria/${id}`)
     fetchMonitorias()
   } catch (err) {
     console.error("Erro ao excluir monitoria:", err)
