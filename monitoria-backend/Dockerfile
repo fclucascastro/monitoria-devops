@@ -24,4 +24,5 @@ RUN npx prisma generate
 # Porta da aplicação NestJS
 EXPOSE 3000
 
-CMD ["node", "dist/main"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
+
