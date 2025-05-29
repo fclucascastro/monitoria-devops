@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import axios from "axios"
 import type { Monitoria } from "./types"
-const API_URL = import.meta.env.VITE_API_URL;
+
 
 const dias = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira']
 
