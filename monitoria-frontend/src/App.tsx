@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import axios from "axios"
 import type { Monitoria } from "./types"
+const API_URL = import.meta.env.VITE_API_URL;
 
 const dias = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira']
 
@@ -10,7 +11,8 @@ function App() {
   const [nova, setNova] = useState({ titulo: "", professor: "", horario: "", local: ""})
 
   const fetchMonitorias = () => {
-    axios.get("http://localhost:3000/monitoria")
+    {/*axios.get("http://localhost:3000/monitoria")*/}
+    axios.get(`${API_URL}/monitoria`)
       .then(res => setMonitorias(res.data))
   }
 
@@ -19,7 +21,8 @@ function App() {
   }, [])
 
   const enviarMonitoria = async () => {
-    await axios.post("http://localhost:3000/monitoria", nova)
+    {/*await axios.post("http://localhost:3000/monitoria", nova)*/}
+    await axios.post("`${API_URL}/monitoria", nova)
     fetchMonitorias()
     setNova({ titulo: "", professor: "", horario: "", local:"" })
     setModalOpen(false)
@@ -29,7 +32,8 @@ function App() {
   if (!confirm("Tem certeza que deseja excluir esta monitoria?")) return;
 
   try {
-    await axios.delete(`http://localhost:3000/monitoria/${id}`)
+    {/*await axios.delete(`http://localhost:3000/monitoria/${id}`)*/}
+     await axios.delete(`${API_URL}/monitoria/${id}`)
     fetchMonitorias()
   } catch (err) {
     console.error("Erro ao excluir monitoria:", err)
