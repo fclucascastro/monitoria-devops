@@ -35,4 +35,6 @@ jobs:
           node-version: 18
       - run: npm ci
       - run: npm run build
-      - run: npm test || echo "Sem testes configurados"
+      - name: Testar backend #esta sem banco por enquanto!
+        run: npm test
+        continue-on-error: true
