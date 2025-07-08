@@ -1,4 +1,3 @@
-````markdown
 # Monitoria-DevOps
 
 Uma aplicação web **simples** de gerenciamento de monitorias acadêmicas, desenvolvida como estudo de caso para aplicação prática dos **conceitos e fundamentos DevOps** em um contexto universitário.
@@ -33,32 +32,34 @@ O foco está em evidenciar como a cultura DevOps acelera, organiza e estabiliza 
    ```bash
    git clone https://github.com/fclucascastro/monitoria-devops.git
    cd monitoria-devops
-````
+   ```
 
-2. **Configure variáveis de ambiente**
+2. **Configure as variáveis de ambiente**  
+   Copie os arquivos `.env.example` e ajuste conforme necessário:
 
-   * Copie e ajuste `monitoria-backend/.env.example` → `monitoria-backend/.env`
-   * Copie e ajuste `monitoria-frontend/.env.example` → `monitoria-frontend/.env`
+   ```bash
+   cp monitoria-backend/.env.example monitoria-backend/.env
+   cp monitoria-frontend/.env.example monitoria-frontend/.env
+   ```
 
-3. **Suba os serviços com Docker**
-
+3. **Suba os serviços com Docker**  
    ```bash
    cd monitoria-backend
    docker compose up --build
    ```
 
-4. **Execute o front-end**
-
+4. **Execute o front-end**  
+   Em outro terminal:
    ```bash
-   cd ../monitoria-frontend
+   cd monitoria-frontend
    npm install
    npm run dev
    ```
 
-5. **Acesse**
+5. **Acesse a aplicação**
 
-   * Front-end: [http://localhost:5173](http://localhost:5173)
-   * API: [http://localhost:3000/monitoria](http://localhost:3000/monitoria)
+   - Front-end: [http://localhost:5173](http://localhost:5173)  
+   - API: [http://localhost:3000/monitoria](http://localhost:3000/monitoria)
 
 ---
 
@@ -66,10 +67,10 @@ O foco está em evidenciar como a cultura DevOps acelera, organiza e estabiliza 
 
 O workflow de CI/CD automatiza:
 
-1. Instalação de dependências
-2. Testes do back-end (`npm test`)
-3. Build do front-end (`npm run build`)
-4. (Opcional) Deploy em staging/prod
+1. Instalação de dependências  
+2. Execução dos testes no back-end (`npm test`)  
+3. Build do front-end (`npm run build`)  
+4. (Opcional) Deploy em staging/prod  
 
 **Localização do arquivo**:
 
@@ -81,30 +82,26 @@ O workflow de CI/CD automatiza:
 
 ## 📦 Deploy
 
-* **Front-end**: [https://monitoria-devops.vercel.app](https://monitoria-devops.vercel.app)
-* **Back-end**: hospedado no Render
-* **Banco de dados**: PostgreSQL gratuito no Render
+- **Front-end**: [https://monitoria-devops.vercel.app](https://monitoria-devops.vercel.app)  
+- **Back-end**: hospedado no Render  
+- **Banco de dados**: PostgreSQL gratuito no Render  
 
 ---
 
 ## 🤝 Contribuição
 
-1. Abra uma *issue* para relatar bugs ou sugerir melhorias.
-2. Faça um fork e crie uma branch (`feature/nome-da-feature`).
-3. Abra um *pull request* para revisão.
+1. Abra uma *issue* para relatar bugs ou sugerir melhorias.  
+2. Faça um fork e crie uma branch (`feature/nome-da-feature`).  
+3. Abra um *pull request* para revisão.  
 
 ---
 
 ## ⚖️ Licença
 
-Este projeto está licenciado sob a [MIT License](LICENSE).
+Este projeto está licenciado sob a [MIT License](LICENSE).  
 Uso pessoal e acadêmico; fique à vontade para estudar ou adaptar.
 
 ---
 
-> **Nota**
+> **Nota**  
 > A simplicidade deste sistema é proposital: o objetivo é demonstrar **boas práticas DevOps**, não recursos avançados de aplicação.
-
-```
-::contentReference[oaicite:0]{index=0}
-```
