@@ -1,0 +1,489 @@
+{
+  "service": {
+    "service": "monitoria-backend-service",
+    "serviceObject": {
+      "name": "monitoria-backend-service"
+    },
+    "provider": {
+      "name": "aws",
+      "profile": "serverless",
+      "region": "us-east-1",
+      "runtime": "nodejs16.x",
+      "role": "arn:aws:lambda:us-east-1:655946423704:function:MonitoriaLambda",
+      "apiGateway": {
+        "minimumCompressionSize": 1024,
+        "shouldStartNameWithService": true
+      },
+      "vpc": {
+        "securityGroupIds": [
+          "sg-0b44e382b05719913"
+        ],
+        "subnetIds": [
+          "subnet-0ef620a9079d193e0",
+          "subnet-0f4149d7b8a409c9a"
+        ]
+      },
+      "environment": {
+        "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+        "NODE_OPTIONS": "--enable-source-maps --stack-trace-limit=1000",
+        "DB_HOST": "monitoria-db.cgdsipnyjpc5.us-east-1.rds.amazonaws.com",
+        "DB_PORT": "5432",
+        "DB_USER": "monitoria_admin",
+        "DB_PASS": "lucas0467",
+        "DB_NAME": "monitoria"
+      },
+      "stage": "dev",
+      "versionFunctions": true,
+      "compiledCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ServerlessDeploymentBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketEncryption": {
+                "ServerSideEncryptionConfiguration": [
+                  {
+                    "ServerSideEncryptionByDefault": {
+                      "SSEAlgorithm": "AES256"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ServerlessDeploymentBucketPolicy": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+              "Bucket": {
+                "Ref": "ServerlessDeploymentBucket"
+              },
+              "PolicyDocument": {
+                "Statement": [
+                  {
+                    "Action": "s3:*",
+                    "Effect": "Deny",
+                    "Principal": "*",
+                    "Resource": [
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":s3:::",
+                            {
+                              "Ref": "ServerlessDeploymentBucket"
+                            },
+                            "/*"
+                          ]
+                        ]
+                      },
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":s3:::",
+                            {
+                              "Ref": "ServerlessDeploymentBucket"
+                            }
+                          ]
+                        ]
+                      }
+                    ],
+                    "Condition": {
+                      "Bool": {
+                        "aws:SecureTransport": false
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "AppLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/monitoria-backend-service-dev-app"
+            }
+          },
+          "AppLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/monitoria-backend-service/dev/1752251038924-2025-07-11T16:23:58.924Z/app.zip"
+              },
+              "Handler": "src/functions/app/handler.main",
+              "Runtime": "nodejs16.x",
+              "FunctionName": "monitoria-backend-service-dev-app",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+                  "NODE_OPTIONS": "--enable-source-maps --stack-trace-limit=1000",
+                  "DB_HOST": "monitoria-db.cgdsipnyjpc5.us-east-1.rds.amazonaws.com",
+                  "DB_PORT": "5432",
+                  "DB_USER": "monitoria_admin",
+                  "DB_PASS": "lucas0467",
+                  "DB_NAME": "monitoria"
+                }
+              },
+              "Role": "arn:aws:lambda:us-east-1:655946423704:function:MonitoriaLambda",
+              "VpcConfig": {
+                "SecurityGroupIds": {
+                  "$ref": "$[\"service\"][\"provider\"][\"vpc\"][\"securityGroupIds\"]"
+                },
+                "SubnetIds": {
+                  "$ref": "$[\"service\"][\"provider\"][\"vpc\"][\"subnetIds\"]"
+                }
+              }
+            },
+            "DependsOn": [
+              "AppLogGroup"
+            ]
+          },
+          "AppLambdaVersionM4nNNeSVOkk42453NINY8tmhT4LGjAQ7k4Zh9d0VU": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "AppLambdaFunction"
+              },
+              "CodeSha256": "S40ICHrvgsYj/SXUaV/yNknMUq3rb/jX7ZEn/K5G7hw="
+            }
+          },
+          "ApiGatewayRestApi": {
+            "Type": "AWS::ApiGateway::RestApi",
+            "Properties": {
+              "Name": "monitoria-backend-service-dev",
+              "EndpointConfiguration": {
+                "Types": [
+                  "EDGE"
+                ]
+              },
+              "Policy": "",
+              "MinimumCompressionSize": 1024
+            }
+          },
+          "ApiGatewayResourceTest": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+              "ParentId": {
+                "Fn::GetAtt": [
+                  "ApiGatewayRestApi",
+                  "RootResourceId"
+                ]
+              },
+              "PathPart": "test",
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              }
+            }
+          },
+          "ApiGatewayMethodTestGet": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "HttpMethod": "GET",
+              "RequestParameters": {},
+              "ResourceId": {
+                "Ref": "ApiGatewayResourceTest"
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "ApiKeyRequired": false,
+              "AuthorizationType": "NONE",
+              "Integration": {
+                "IntegrationHttpMethod": "POST",
+                "Type": "AWS_PROXY",
+                "Uri": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":apigateway:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":lambda:path/2015-03-31/functions/",
+                      {
+                        "Fn::GetAtt": [
+                          "AppLambdaFunction",
+                          "Arn"
+                        ]
+                      },
+                      "/invocations"
+                    ]
+                  ]
+                }
+              },
+              "MethodResponses": []
+            },
+            "DependsOn": [
+              "AppLambdaPermissionApiGateway"
+            ]
+          },
+          "ApiGatewayDeployment1752251034208": {
+            "Type": "AWS::ApiGateway::Deployment",
+            "Properties": {
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "StageName": "dev"
+            },
+            "DependsOn": [
+              "ApiGatewayMethodTestGet"
+            ]
+          },
+          "AppLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "AppLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "ApiGatewayRestApi"
+                    },
+                    "/*/*"
+                  ]
+                ]
+              }
+            }
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": {
+              "Ref": "ServerlessDeploymentBucket"
+            },
+            "Export": {
+              "Name": "sls-monitoria-backend-service-dev-ServerlessDeploymentBucketName"
+            }
+          },
+          "AppLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "AppLambdaVersionM4nNNeSVOkk42453NINY8tmhT4LGjAQ7k4Zh9d0VU"
+            },
+            "Export": {
+              "Name": "sls-monitoria-backend-service-dev-AppLambdaFunctionQualifiedArn"
+            }
+          },
+          "ServiceEndpoint": {
+            "Description": "URL of the service endpoint",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  "https://",
+                  {
+                    "Ref": "ApiGatewayRestApi"
+                  },
+                  ".execute-api.",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ".",
+                  {
+                    "Ref": "AWS::URLSuffix"
+                  },
+                  "/dev"
+                ]
+              ]
+            },
+            "Export": {
+              "Name": "sls-monitoria-backend-service-dev-ServiceEndpoint"
+            }
+          }
+        }
+      },
+      "coreCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ServerlessDeploymentBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketEncryption": {
+                "ServerSideEncryptionConfiguration": [
+                  {
+                    "ServerSideEncryptionByDefault": {
+                      "SSEAlgorithm": "AES256"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ServerlessDeploymentBucketPolicy": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+              "Bucket": {
+                "Ref": "ServerlessDeploymentBucket"
+              },
+              "PolicyDocument": {
+                "Statement": [
+                  {
+                    "Action": "s3:*",
+                    "Effect": "Deny",
+                    "Principal": "*",
+                    "Resource": [
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":s3:::",
+                            {
+                              "Ref": "ServerlessDeploymentBucket"
+                            },
+                            "/*"
+                          ]
+                        ]
+                      },
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":s3:::",
+                            {
+                              "Ref": "ServerlessDeploymentBucket"
+                            }
+                          ]
+                        ]
+                      }
+                    ],
+                    "Condition": {
+                      "Bool": {
+                        "aws:SecureTransport": false
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": {
+              "Ref": "ServerlessDeploymentBucket"
+            }
+          }
+        }
+      }
+    },
+    "custom": {
+      "esbuild": {
+        "bundle": true,
+        "minify": false,
+        "sourcemap": true,
+        "exclude": [
+          "aws-sdk"
+        ],
+        "target": "node16",
+        "define": {},
+        "platform": "node",
+        "concurrency": 10
+      }
+    },
+    "plugins": [
+      "serverless-esbuild"
+    ],
+    "pluginsData": {},
+    "functions": {
+      "app": {
+        "handler": "src/functions/app/handler.main",
+        "events": [
+          {
+            "http": {
+              "path": "test",
+              "method": "get",
+              "integration": "AWS_PROXY"
+            }
+          }
+        ],
+        "name": "monitoria-backend-service-dev-app",
+        "package": {
+          "artifact": ".serverless/app.zip"
+        },
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs16.x",
+        "vpc": {},
+        "versionLogicalId": "AppLambdaVersionM4nNNeSVOkk42453NINY8tmhT4LGjAQ7k4Zh9d0VU"
+      }
+    },
+    "configValidationMode": "warn",
+    "serviceFilename": "serverless.ts",
+    "initialServerlessConfig": {
+      "service": "monitoria-backend-service",
+      "frameworkVersion": "3",
+      "plugins": {
+        "$ref": "$[\"service\"][\"plugins\"]"
+      },
+      "provider": {
+        "$ref": "$[\"service\"][\"provider\"]"
+      },
+      "functions": {
+        "$ref": "$[\"service\"][\"functions\"]"
+      },
+      "package": {
+        "individually": true,
+        "artifactsS3KeyDirname": "serverless/monitoria-backend-service/dev/code-artifacts"
+      },
+      "custom": {
+        "$ref": "$[\"service\"][\"custom\"]"
+      }
+    },
+    "layers": {},
+    "isDashboardMonitoringPreconfigured": false
+  },
+  "package": {
+    "individually": true,
+    "artifactDirectoryName": "serverless/monitoria-backend-service/dev/1752251038924-2025-07-11T16:23:58.924Z",
+    "artifact": ""
+  }
+}
