@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import axios from "axios"
 import { AnimatePresence, motion } from "framer-motion"
-import { Moon, Sun, BookOpen, Home, Filter, LogOut, Pencil } from "lucide-react"
+import { Moon, Sun, BookOpen, Home, Filter, LogOut, Edit2 } from "lucide-react"
 import type { Monitoria } from "./types"
 
 const dias = [
@@ -22,15 +22,7 @@ const locais: string[] = [
   "Bloco 1 - LABORATÓRIO 3", "Bloco 1 - LABORATÓRIO 4"
 ]
 
-type EditandoMonitoria = {
-  id: number;
-  titulo: string;
-  professor: string[];
-  monitorInput: string;
-  dias: string[];
-  horario: string;
-  local: string;
-} | null;
+type ModalMode = "new" | "edit"
 
 function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(
@@ -38,15 +30,16 @@ function App() {
   )
   const [monitorias, setMonitorias] = useState<Monitoria[]>([])
   const [modalOpen, setModalOpen] = useState(false)
+  const [modalMode, setModalMode] = useState<ModalMode>("new")
   const [nova, setNova] = useState({
+    id: undefined as number | undefined,
     titulo: "",
-    professor: [] as string[],
+    monitores: [] as string[],
     monitorInput: "",
     dias: [] as string[],
     horario: "",
-    local: "",
+    local: ""
   })
-  const [editando, setEditando] = useState<EditandoMonitoria>(null)
   const [filter, setFilter] = useState("")
   const [message, setMessage] = useState<string | null>(null)
   const [sidebarAlert, setSidebarAlert] = useState<string | null>(null)
@@ -83,7 +76,7 @@ function App() {
   const validarNova = () => {
     if (
       !nova.titulo.trim() ||
-      nova.professor.length === 0 ||
+      nova.monitores.length === 0 ||
       nova.dias.length === 0 ||
       !nova.horario.trim() ||
       !nova.local.trim()
@@ -94,29 +87,61 @@ function App() {
     return true
   }
 
-  const enviarMonitoria = async () => {
+  // Envia ou edita monitoria
+  const salvarMonitoria = async () => {
     if (!validarNova()) return
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/monitoria`, {
-        titulo: nova.titulo,
-        professor: nova.professor.join(", "),
-        horario: `${nova.dias.join(", ")} ${nova.horario}`,
-        local: nova.local
-      })
+      if (modalMode === "new") {
+        await axios.post(`${import.meta.env.VITE_API_URL}/monitoria`, {
+          titulo: nova.titulo,
+          professor: nova.monitores.join(", "),
+          horario: `${nova.dias.join(", ")} ${nova.horario}`,
+          local: nova.local
+        })
+        setMessage("Monitoria adicionada com sucesso!")
+      } else if (modalMode === "edit" && nova.id) {
+        await axios.patch(`${import.meta.env.VITE_API_URL}/monitoria/${nova.id}`, {
+          titulo: nova.titulo,
+          professor: nova.monitores.join(", "),
+          horario: `${nova.dias.join(", ")} ${nova.horario}`,
+          local: nova.local
+        })
+        setMessage("Monitoria atualizada com sucesso!")
+      }
       fetchMonitorias()
-      setMessage("Monitoria adicionada com sucesso!")
       setNova({
+        id: undefined,
         titulo: "",
-        professor: [],
+        monitores: [],
         monitorInput: "",
         dias: [],
         horario: "",
-        local: "",
+        local: ""
       })
       setModalOpen(false)
+      setModalMode("new")
     } catch {
-      setMessage("Erro ao criar monitoria.")
+      setMessage("Erro ao salvar monitoria.")
     }
+  }
+
+  // Preenche o formulário com dados para edição
+  const editarMonitoria = (m: Monitoria) => {
+    // Divide campos para reatribuir ao formulário do modal
+    let monitores = m.professor ? m.professor.split(",").map(s => s.trim()) : []
+    let [diasParte, horarioParte] = m.horario ? m.horario.split(/\s(?=\d)/) : ["", ""]
+    let diasArr = diasParte ? diasParte.split(",").map(s => s.trim()) : []
+    setNova({
+      id: m.id,
+      titulo: m.titulo,
+      monitores,
+      monitorInput: "",
+      dias: diasArr,
+      horario: horarioParte || "",
+      local: m.local || ""
+    })
+    setModalOpen(true)
+    setModalMode("edit")
   }
 
   const solicitarExclusao = (id: number) => setDeleteModal({ open: true, id })
@@ -133,74 +158,12 @@ function App() {
     setDeleteModal({ open: false, id: undefined })
   }
 
-  // -------------------------
-  // Edição de monitoria
-  // -------------------------
-  const abrirModalEdicao = (m: Monitoria) => {
-    // Parse para separar dias e horário
-    let diasArr: string[] = []
-    let horarioStr = ""
-    const match = m.horario.match(/^(.+)\s(\d{2}:\d{2}-\d{2}:\d{2})$/)
-    if (match) {
-      diasArr = match[1].split(",").map(d => d.trim())
-      horarioStr = match[2]
-    } else {
-      // fallback para casos antigos
-      diasArr = [m.horario]
-      horarioStr = ""
-    }
-    setEditando({
-      id: m.id,
-      titulo: m.titulo,
-      professor: m.professor.split(",").map(s => s.trim()),
-      monitorInput: "",
-      dias: diasArr,
-      horario: horarioStr,
-      local: m.local
-    })
-    setModalOpen(true)
-  }
-
-  const validarEditando = () => {
-    if (
-      !editando ||
-      !editando.titulo.trim() ||
-      editando.professor.length === 0 ||
-      editando.dias.length === 0 ||
-      !editando.horario.trim() ||
-      !editando.local.trim()
-    ) {
-      setMessage("Preencha todos os campos obrigatórios!")
-      return false
-    }
-    return true
-  }
-
-  const salvarEdicao = async () => {
-    if (!editando || !validarEditando()) return
-    try {
-      await axios.patch(`${import.meta.env.VITE_API_URL}/monitoria/${editando.id}`, {
-        titulo: editando.titulo,
-        professor: editando.professor.join(", "),
-        horario: `${editando.dias.join(", ")} ${editando.horario}`,
-        local: editando.local
-      })
-      fetchMonitorias()
-      setMessage("Monitoria atualizada com sucesso!")
-      setEditando(null)
-      setModalOpen(false)
-    } catch {
-      setMessage("Erro ao editar monitoria.")
-    }
-  }
-
   const filtradas = monitorias.filter(m =>
     m.titulo.toLowerCase().includes(filter.toLowerCase())
     || m.professor.toLowerCase().includes(filter.toLowerCase())
     || (m.local && m.local.toLowerCase().includes(filter.toLowerCase()))
   )
 
-  // --- COMPONENTE PRINCIPAL ---
   return (
     <div className={`min-h-screen flex bg-gray-50 dark:bg-[#181c27] transition-colors`}>
       {/* Sidebar */}
@@ -245,7 +208,7 @@ function App() {
           <div className="flex items-center gap-2">
             <input
               type="text"
-              placeholder="Buscar por disciplina, professor, local..."
+              placeholder="Buscar por disciplina, monitores, local..."
               value={filter}
               onChange={e => setFilter(e.target.value)}
               className="p-2 rounded-lg border border-gray-300 dark:bg-[#23253c] dark:text-white"
@@ -253,7 +216,19 @@ function App() {
             />
             <button
               className="ml-3 bg-blue-600 hover:bg-blue-800 text-white px-5 py-2 rounded-lg shadow font-bold"
-              onClick={() => { setModalOpen(true); setEditando(null); }}
+              onClick={() => {
+                setModalMode("new")
+                setNova({
+                  id: undefined,
+                  titulo: "",
+                  monitores: [],
+                  monitorInput: "",
+                  dias: [],
+                  horario: "",
+                  local: ""
+                })
+                setModalOpen(true)
+              }}
             >
               + Adicionar
             </button>
@@ -331,7 +306,7 @@ function App() {
         )}
         </AnimatePresence>
 
-        {/* Modal Nova Monitoria (NOVO VISUAL) */}
+        {/* Modal Nova Monitoria */}
         <AnimatePresence>
         {modalOpen && (
           <motion.div
@@ -345,59 +320,41 @@ function App() {
               exit={{ scale: 0.8, opacity: 0 }}
             >
               <h2 className="text-2xl font-bold mb-5 text-gray-700 dark:text-white text-center">
-                {editando ? "Editar Monitoria" : "Nova Monitoria"}
+                {modalMode === "edit" ? "Editar Monitoria" : "Nova Monitoria"}
               </h2>
               {/* Disciplina */}
               <label className="block mb-2 font-semibold">Disciplina <span className="text-red-500">*</span></label>
               <input className="w-full mb-3 p-3 rounded border dark:bg-[#202334] dark:text-white"
                 placeholder="Disciplina"
-                value={editando ? editando.titulo : nova.titulo}
-                onChange={e => editando
-                  ? setEditando({ ...editando, titulo: e.target.value })
-                  : setNova({ ...nova, titulo: e.target.value })
-                }
+                value={nova.titulo}
+                onChange={e => setNova({ ...nova, titulo: e.target.value })}
               />
               {/* Monitores */}
               <label className="block mb-2 font-semibold">Monitores <span className="text-red-500">*</span></label>
               <div className="flex flex-wrap gap-2 mb-2">
-                {(editando ? editando.professor : nova.professor).map((nome, i) => (
+                {nova.monitores.map((nome, i) => (
                   <span key={i} className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full flex items-center">
                     {nome}
                     <button type="button" className="ml-2 text-xs" onClick={() => {
-                      if (editando) {
-                        setEditando({ ...editando, professor: editando.professor.filter((_, j) => j !== i) })
-                      } else {
-                        setNova({ ...nova, professor: nova.professor.filter((_, j) => j !== i) })
-                      }
+                      setNova({ ...nova, monitores: nova.monitores.filter((_, j) => j !== i) })
                     }}>✕</button>
                   </span>
                 ))}
                 <input
                   className="flex-1 min-w-[120px] p-2 border rounded dark:bg-[#202334] dark:text-white"
                   placeholder="Digite o nome e pressione Enter"
-                  value={editando ? editando.monitorInput : nova.monitorInput}
-                  onChange={e => editando
-                    ? setEditando({ ...editando, monitorInput: e.target.value })
-                    : setNova({ ...nova, monitorInput: e.target.value })
-                  }
+                  value={nova.monitorInput}
+                  onChange={e => setNova({ ...nova, monitorInput: e.target.value })}
                   onKeyDown={e => {
                     if (
                       e.key === "Enter" &&
-                      (editando ? editando.monitorInput.trim() : nova.monitorInput.trim())
+                      nova.monitorInput.trim()
                     ) {
-                      if (editando) {
-                        setEditando({
-                          ...editando,
-                          professor: [...editando.professor, editando.monitorInput.trim()],
-                          monitorInput: ""
-                        });
-                      } else {
-                        setNova({
-                          ...nova,
-                          professor: [...nova.professor, nova.monitorInput.trim()],
-                          monitorInput: ""
-                        });
-                      }
+                      setNova({
+                        ...nova,
+                        monitores: [...nova.monitores, nova.monitorInput.trim()],
+                        monitorInput: ""
+                      });
                       e.preventDefault();
                     }
                   }}
@@ -408,26 +365,17 @@ function App() {
               <div className="flex gap-2 mb-3 flex-wrap">
                 {dias.map(dia => (
                   <label key={dia} className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer border
-                    ${(editando ? editando.dias : nova.dias).includes(dia) ? "bg-blue-100 border-blue-400" : "border-gray-300"}`}>
+                    ${nova.dias.includes(dia) ? "bg-blue-100 border-blue-400" : "border-gray-300"}`}>
                     <input
                       type="checkbox"
-                      checked={(editando ? editando.dias : nova.dias).includes(dia)}
+                      checked={nova.dias.includes(dia)}
                       onChange={() => {
-                        if (editando) {
-                          setEditando({
-                            ...editando,
-                            dias: editando.dias.includes(dia)
-                              ? editando.dias.filter(d => d !== dia)
-                              : [...editando.dias, dia]
-                          })
-                        } else {
-                          setNova({
-                            ...nova,
-                            dias: nova.dias.includes(dia)
-                              ? nova.dias.filter(d => d !== dia)
-                              : [...nova.dias, dia]
-                          })
-                        }
+                        setNova({
+                          ...nova,
+                          dias: nova.dias.includes(dia)
+                            ? nova.dias.filter(d => d !== dia)
+                            : [...nova.dias, dia]
+                        })
                       }}
                       className="accent-blue-600"
                     />
@@ -440,11 +388,8 @@ function App() {
               <input
                 className="w-full mb-3 p-3 rounded border dark:bg-[#202334] dark:text-white"
                 placeholder="Ex: 09:00-10:00"
-                value={editando ? editando.horario : nova.horario}
-                onChange={e => editando
-                  ? setEditando({ ...editando, horario: e.target.value })
-                  : setNova({ ...nova, horario: e.target.value })
-                }
+                value={nova.horario}
+                onChange={e => setNova({ ...nova, horario: e.target.value })}
               />
               {/* Local com autocomplete */}
               <label className="block mb-2 font-semibold">Local <span className="text-red-500">*</span></label>
@@ -452,29 +397,20 @@ function App() {
                 className="w-full mb-3 p-3 rounded border dark:bg-[#202334] dark:text-white"
                 list="locais-list"
                 placeholder="Digite ou selecione o local"
-                value={editando ? editando.local : nova.local}
-                onChange={e => editando
-                  ? setEditando({ ...editando, local: e.target.value })
-                  : setNova({ ...nova, local: e.target.value })
-                }
+                value={nova.local}
+                onChange={e => setNova({ ...nova, local: e.target.value })}
                 autoComplete="off"
               />
               <datalist id="locais-list">
                 {locais.map(local => <option value={local} key={local}/>)}
               </datalist>
               <div className="flex justify-end gap-2 mt-4">
-                <button
-                  onClick={() => {
-                    setModalOpen(false)
-                    setEditando(null)
-                  }}
-                  className="px-4 py-2 text-gray-600 dark:text-gray-200"
-                >Cancelar</button>
-                <button
-                  onClick={editando ? salvarEdicao : enviarMonitoria}
-                  className="bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-800"
-                >
-                  {editando ? "Salvar" : "Adicionar"}
+                <button onClick={() => {
+                  setModalOpen(false)
+                  setModalMode("new")
+                }} className="px-4 py-2 text-gray-600 dark:text-gray-200">Cancelar</button>
+                <button onClick={salvarMonitoria} className="bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-800">
+                  {modalMode === "edit" ? "Atualizar" : "Salvar"}
                 </button>
               </div>
             </motion.div>
@@ -505,21 +441,17 @@ function App() {
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="text-lg font-bold mb-1 text-blue-900 dark:text-white">{m.titulo}</p>
-                        <div className="flex flex-wrap gap-1 mb-1">
-                          {m.professor.split(',').map((nome: string, i: number) => (
-                            <span key={i} className="bg-blue-100 text-blue-700 rounded-full px-2 py-0.5 text-xs">{nome.trim()}</span>
-                          ))}
-                        </div>
+                        <p className="font-semibold text-gray-600 dark:text-blue-200 mb-2">{m.professor}</p>
                         <p className="text-xs text-gray-500 dark:text-blue-100">{m.horario}</p>
                         <p className="text-xs text-gray-400 dark:text-blue-200">{m.local}</p>
                       </div>
                       <div className="flex flex-col gap-2 items-end">
                         <button
-                          onClick={() => abrirModalEdicao(m)}
-                          className="text-blue-500 hover:text-blue-800 opacity-80 hover:opacity-100 transition mb-1"
+                          onClick={() => editarMonitoria(m)}
+                          className="text-blue-500 hover:text-blue-800 opacity-70 hover:opacity-100 transition mb-1"
                           title="Editar"
                         >
-                          <Pencil size={20}/>
+                          <Edit2 size={20}/>
                         </button>
                         <button
                           onClick={() => solicitarExclusao(m.id)}
