@@ -10,43 +10,79 @@ const dias = [
   'Sexta-feira'
 ]
 
+const diasValidos = dias.map(d => d.split('-')[0].toLowerCase())
+
 function App() {
   const [monitorias, setMonitorias] = useState<Monitoria[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [nova, setNova] = useState({ titulo: "", professor: "", horario: "", local: "" })
+  const [mensagem, setMensagem] = useState<{ tipo: 'erro' | 'sucesso', texto: string } | null>(null)
 
-  // Agora é async!
   const fetchMonitorias = async () => {
     const res = await axios.get(`${import.meta.env.VITE_API_URL}/monitoria`)
     setMonitorias(res.data)
   }
 
-  useEffect(() => {
-    fetchMonitorias()
-  }, [])
+  useEffect(() => { fetchMonitorias() }, [])
 
-  // Uso de await para garantir atualização
+  useEffect(() => {
+    if (mensagem) {
+      const timer = setTimeout(() => setMensagem(null), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [mensagem])
+
   const enviarMonitoria = async () => {
-    await axios.post(`${import.meta.env.VITE_API_URL}/monitoria`, nova)
-    await fetchMonitorias()
-    setNova({ titulo: "", professor: "", horario: "", local: "" })
-    setModalOpen(false)
+    if (!nova.titulo || !nova.professor || !nova.horario || !nova.local) {
+      setMensagem({ tipo: 'erro', texto: 'Preencha todos os campos obrigatórios!' })
+      return
+    }
+    const horarioLower = nova.horario.trim().toLowerCase()
+    const diaInformado = horarioLower.split(' ')[0]
+    if (!diasValidos.includes(diaInformado)) {
+      setMensagem({
+        tipo: 'erro',
+        texto: 'O campo Horário deve começar com um dia da semana válido (Segunda, Terça, ... Sexta).'
+      })
+      return
+    }
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/monitoria`, nova)
+      await fetchMonitorias()
+      setNova({ titulo: "", professor: "", horario: "", local: "" })
+      setMensagem({ tipo: 'sucesso', texto: 'Monitoria cadastrada com sucesso!' })
+      setModalOpen(false)
+    } catch (err) {
+      setMensagem({ tipo: 'erro', texto: 'Erro ao cadastrar monitoria.' })
+    }
   }
 
-  // Uso de await para garantir atualização
   const deletarMonitoria = async (id: number) => {
     if (!confirm("Tem certeza que deseja excluir esta monitoria?")) return;
-
     try {
       await axios.delete(`${import.meta.env.VITE_API_URL}/monitoria/${id}`)
       await fetchMonitorias()
+      setMensagem({ tipo: 'sucesso', texto: 'Monitoria excluída com sucesso!' })
     } catch (err) {
-      console.error("Erro ao excluir monitoria:", err)
+      setMensagem({ tipo: 'erro', texto: 'Erro ao excluir monitoria.' })
     }
   }
 
   return (
     <div className="min-h-screen bg-slate-900 text-white p-6">
+      {/* Mensagem de feedback visual */}
+      {mensagem && (
+        <div
+          className={
+            mensagem.tipo === 'erro'
+              ? 'bg-red-200 text-red-800 rounded px-4 py-2 mb-4'
+              : 'bg-green-200 text-green-800 rounded px-4 py-2 mb-4'
+          }
+        >
+          {mensagem.texto}
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Grade de Monitorias</h1>
         <button
@@ -74,12 +110,19 @@ function App() {
               value={nova.professor}
               onChange={(e) => setNova({ ...nova, professor: e.target.value })}
             />
+            {/* Auto-complete de dias no campo horário */}
             <input
               className="w-full mb-4 p-2 border rounded"
               placeholder="Horário (ex: Segunda 10h)"
               value={nova.horario}
+              list="dias-da-semana"
               onChange={(e) => setNova({ ...nova, horario: e.target.value })}
             />
+            <datalist id="dias-da-semana">
+              {dias.map(dia => (
+                <option key={dia} value={dia.split('-')[0] + " "} />
+              ))}
+            </datalist>
             <input
               className="w-full mb-4 p-2 border rounded"
               placeholder="Local (sala e bloco)"
