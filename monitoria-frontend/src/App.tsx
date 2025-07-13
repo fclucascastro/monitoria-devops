@@ -7,7 +7,6 @@ import type { Monitoria } from "./types"
 const dias = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira']
 
 function App() {
-  // Theme dinâmico (agora simples, pois já inicializa certo)
   const [theme, setTheme] = useState<'light' | 'dark'>(
     document.documentElement.classList.contains('dark') ? "dark" : "light"
   )
@@ -17,8 +16,8 @@ function App() {
   const [filter, setFilter] = useState("")
   const [message, setMessage] = useState<string | null>(null)
   const [sidebarAlert, setSidebarAlert] = useState<string | null>(null)
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean, id?: number }>({ open: false })
 
-  // Atualiza HTML sempre que muda
   useEffect(() => {
     if (theme === "dark") {
       document.documentElement.classList.add("dark")
@@ -29,13 +28,17 @@ function App() {
   }, [theme])
 
   useEffect(() => { fetchMonitorias() }, [])
-
-  // Mensagem some automática
   useEffect(() => {
     if (!message) return
     const timer = setTimeout(() => setMessage(null), 4000)
     return () => clearTimeout(timer)
   }, [message])
+
+  useEffect(() => {
+    if (!sidebarAlert) return
+    const timer = setTimeout(() => setSidebarAlert(null), 3000)
+    return () => clearTimeout(timer)
+  }, [sidebarAlert])
 
   const fetchMonitorias = () => {
     axios.get(`${import.meta.env.VITE_API_URL}/monitoria`)
@@ -62,15 +65,18 @@ function App() {
     }
   }
 
-  const deletarMonitoria = async (id: number) => {
-    if (!confirm("Deseja realmente excluir?")) return
+  const solicitarExclusao = (id: number) => setDeleteModal({ open: true, id })
+
+  const deletarMonitoria = async () => {
+    if (!deleteModal.id) return
     try {
-      await axios.delete(`${import.meta.env.VITE_API_URL}/monitoria/${id}`)
+      await axios.delete(`${import.meta.env.VITE_API_URL}/monitoria/${deleteModal.id}`)
       fetchMonitorias()
       setMessage("Monitoria excluída.")
     } catch {
       setMessage("Erro ao excluir.")
     }
+    setDeleteModal({ open: false, id: undefined })
   }
 
   const filtradas = monitorias.filter(m =>
@@ -88,13 +94,13 @@ function App() {
           <button
             className="text-white opacity-90 hover:opacity-100"
             title="Home"
-            onClick={() => setSidebarAlert("Bem-vindo à Home!")}
+            onClick={() => setSidebarAlert("Você está na Home!")}
           >
             <Home size={28}/>
           </button>
           <button
             className="text-white opacity-60 hover:opacity-90"
-            title="Filtro (em breve)"
+            title="Filtro (Em breve)"
             onClick={() => setSidebarAlert("Funcionalidade de filtro em breve!")}
           >
             <Filter size={28}/>
@@ -104,7 +110,7 @@ function App() {
         <button
           className="text-white opacity-60 hover:opacity-100 mb-4"
           title="Sair (Exemplo)"
-          onClick={() => setSidebarAlert("Logout (apenas visual, implemente se quiser!)")}
+          onClick={() => setSidebarAlert("Logout é apenas visual neste protótipo.")}
         >
           <LogOut size={28}/>
         </button>
@@ -158,25 +164,52 @@ function App() {
             <button onClick={() => setMessage(null)} className="ml-3 text-white font-bold">X</button>
           </motion.div>
         )}
-        </AnimatePresence>
-
-        {/* Sidebar Alert Modal */}
-        <AnimatePresence>
         {sidebarAlert && (
           <motion.div
-            className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+            initial={{ opacity: 0, x: -60 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -60 }}
+            className="fixed bottom-8 left-24 z-50 bg-blue-600 text-white px-6 py-3 rounded-xl shadow-lg"
+          >
+            {sidebarAlert}
+          </motion.div>
+        )}
+        </AnimatePresence>
+
+        {/* Modal de confirmação de exclusão */}
+        <AnimatePresence>
+        {deleteModal.open && (
+          <motion.div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={() => setSidebarAlert(null)}
           >
             <motion.div
-              className="bg-white dark:bg-[#23253c] p-8 rounded-xl shadow-2xl w-full max-w-md text-center"
-              initial={{ scale: 0.8, opacity: 0 }}
+              className="bg-white dark:bg-[#23253c] p-8 rounded-xl shadow-2xl w-full max-w-sm text-center"
+              initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              onClick={e => e.stopPropagation()}
+              exit={{ scale: 0.9, opacity: 0 }}
             >
-              <p className="text-lg text-gray-900 dark:text-gray-100 mb-4">{sidebarAlert}</p>
-              <button className="bg-blue-600 hover:bg-blue-800 text-white font-bold px-6 py-2 rounded-lg" onClick={() => setSidebarAlert(null)}>Fechar</button>
+              <div className="mb-4 flex flex-col items-center">
+                <svg className="w-12 h-12 text-red-500 mb-2" fill="none" stroke="currentColor" strokeWidth="2"
+                  viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round"
+                  d="M13 16h-1v-4h-1m0-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" /></svg>
+                <h2 className="text-xl font-bold mb-1 text-gray-700 dark:text-white">
+                  Confirmar exclusão
+                </h2>
+                <p className="text-gray-600 dark:text-gray-300 mb-2">
+                  Tem certeza que deseja excluir esta monitoria?
+                </p>
+              </div>
+              <div className="flex justify-center gap-4 mt-4">
+                <button
+                  className="px-5 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg"
+                  onClick={() => setDeleteModal({ open: false, id: undefined })}
+                >Cancelar</button>
+                <button
+                  className="px-5 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700"
+                  onClick={deletarMonitoria}
+                >Excluir</button>
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -237,7 +270,7 @@ function App() {
                         <p className="text-xs text-gray-400 dark:text-blue-200">{m.local}</p>
                       </div>
                       <button
-                        onClick={() => deletarMonitoria(m.id)}
+                        onClick={() => solicitarExclusao(m.id)}
                         className="text-red-500 hover:text-red-800 opacity-70 hover:opacity-100 transition"
                         title="Excluir"
                       >
