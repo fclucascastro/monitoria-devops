@@ -9,7 +9,6 @@ const dias = [
   'Quinta-feira',
   'Sexta-feira'
 ]
-
 const diasValidos = dias.map(d => d.split('-')[0].toLowerCase())
 
 function App() {
@@ -17,6 +16,7 @@ function App() {
   const [modalOpen, setModalOpen] = useState(false)
   const [nova, setNova] = useState({ titulo: "", professor: "", horario: "", local: "" })
   const [mensagem, setMensagem] = useState<{ tipo: 'erro' | 'sucesso', texto: string } | null>(null)
+  const [busca, setBusca] = useState("")
 
   const fetchMonitorias = async () => {
     const res = await axios.get(`${import.meta.env.VITE_API_URL}/monitoria`)
@@ -93,6 +93,23 @@ function App() {
         </button>
       </div>
 
+      {/* Campo de busca */}
+      <div className="mb-6 flex items-center gap-2">
+        <input
+          className="w-full md:w-1/2 p-2 border rounded text-black"
+          type="text"
+          placeholder="Buscar monitoria por disciplina, professor ou local..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+        />
+        {busca && (
+          <button
+            onClick={() => setBusca("")}
+            className="ml-2 text-sm bg-gray-200 px-2 py-1 rounded"
+          >Limpar</button>
+        )}
+      </div>
+
       {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10">
@@ -110,19 +127,13 @@ function App() {
               value={nova.professor}
               onChange={(e) => setNova({ ...nova, professor: e.target.value })}
             />
-            {/* Auto-complete de dias no campo horário */}
+            {/* Você pode colocar autocomplete no futuro */}
             <input
               className="w-full mb-4 p-2 border rounded"
               placeholder="Horário (ex: Segunda 10h)"
               value={nova.horario}
-              list="dias-da-semana"
               onChange={(e) => setNova({ ...nova, horario: e.target.value })}
             />
-            <datalist id="dias-da-semana">
-              {dias.map(dia => (
-                <option key={dia} value={dia.split('-')[0] + " "} />
-              ))}
-            </datalist>
             <input
               className="w-full mb-4 p-2 border rounded"
               placeholder="Local (sala e bloco)"
@@ -146,7 +157,15 @@ function App() {
             <h2 className="text-lg font-semibold bg-emerald-600 text-center py-2 rounded">{dia}</h2>
             <div className="mt-2 space-y-2">
               {monitorias
-                .filter(m => m.horario.toLowerCase().includes(dia.toLowerCase().split('-')[0]))
+                .filter(m =>
+                  m.horario.toLowerCase().includes(dia.toLowerCase().split('-')[0]) &&
+                  (
+                    busca.trim() === "" ||
+                    m.titulo.toLowerCase().includes(busca.toLowerCase()) ||
+                    m.professor.toLowerCase().includes(busca.toLowerCase()) ||
+                    (m.local || "").toLowerCase().includes(busca.toLowerCase())
+                  )
+                )
                 .map(m => (
                   <div key={m.id} className="bg-white text-black p-2 rounded shadow text-sm">
                     <p className="font-semibold">{m.titulo}</p>
