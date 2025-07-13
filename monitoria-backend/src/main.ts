@@ -18,7 +18,8 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors({ origin: ['*'] });
+  //app.enableCors({ origin: ['*'] });
+  app.enableCors();
 
   // Garante que seja sempre string: se PORT for undefined, cai em "3000"
   const port = parseInt(process.env.PORT ?? '3000', 10);
