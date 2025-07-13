@@ -4,7 +4,10 @@ import { AnimatePresence, motion } from "framer-motion"
 import { Moon, Sun, BookOpen, Home, Filter, LogOut } from "lucide-react"
 import type { Monitoria } from "./types"
 
-const dias = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira']
+const dias = [
+  'Segunda-feira', 'Terça-feira', 'Quarta-feira',
+  'Quinta-feira', 'Sexta-feira'
+]
 
 function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(
@@ -231,7 +234,23 @@ function App() {
               <h2 className="text-2xl font-bold mb-5 text-gray-700 dark:text-white">Nova Monitoria</h2>
               <input className="w-full mb-3 p-3 rounded border dark:bg-[#202334] dark:text-white" placeholder="Disciplina" value={nova.titulo} onChange={e => setNova({ ...nova, titulo: e.target.value })} />
               <input className="w-full mb-3 p-3 rounded border dark:bg-[#202334] dark:text-white" placeholder="Professor" value={nova.professor} onChange={e => setNova({ ...nova, professor: e.target.value })} />
-              <input className="w-full mb-3 p-3 rounded border dark:bg-[#202334] dark:text-white" placeholder="Dia e Horário (ex: Segunda 10h)" value={nova.horario} onChange={e => setNova({ ...nova, horario: e.target.value })} />
+              {/* Autocomplete para dias */}
+              <input
+                className="w-full mb-3 p-3 rounded border dark:bg-[#202334] dark:text-white"
+                placeholder="Dia e Horário (ex: Segunda-feira 10h)"
+                list="dias-da-semana"
+                value={nova.horario}
+                onChange={e => setNova({ ...nova, horario: e.target.value })}
+              />
+              <datalist id="dias-da-semana">
+                <option value="Segunda-feira" />
+                <option value="Terça-feira" />
+                <option value="Quarta-feira" />
+                <option value="Quinta-feira" />
+                <option value="Sexta-feira" />
+                <option value="Sábado" />
+                <option value="Domingo" />
+              </datalist>
               <input className="w-full mb-3 p-3 rounded border dark:bg-[#202334] dark:text-white" placeholder="Local (ex: Bloco 2 Sala 3)" value={nova.local} onChange={e => setNova({ ...nova, local: e.target.value })} />
               <div className="flex justify-end gap-2 mt-4">
                 <button onClick={() => setModalOpen(false)} className="px-4 py-2 text-gray-600 dark:text-gray-200">Cancelar</button>
